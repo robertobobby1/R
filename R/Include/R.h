@@ -250,8 +250,23 @@ namespace R {
             this->write(value, sizeof(T));
         }
 
+        // specialization for char*
+        void write(const char *value, int appendLength) {
+            increaseBufferSizeIfNecessary(appendLength);
+
+            memcpy(ini + size, value, appendLength);
+            size += appendLength;
+        }
+
         template <typename T>
         void write(T const value, int appendLength) {
+            increaseBufferSizeIfNecessary(appendLength);
+
+            memcpy(ini + size, &value, appendLength);
+            size += appendLength;
+        }
+
+        void increaseBufferSizeIfNecessary(int appendLength) {
             if (appendLength + size >= maxSize) {
                 // allocate new & bigger memory
                 maxSize = (appendLength + size) * 2;
@@ -260,9 +275,6 @@ namespace R {
                 delete[] ini;
                 ini = newBuffer;
             }
-
-            memcpy(ini + size, value, appendLength);
-            size += appendLength;
         }
     };
 }  // namespace R
