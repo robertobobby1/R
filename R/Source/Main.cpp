@@ -40,7 +40,7 @@ int main() {
         auto messageLength = R::Utils::randomNumber(10, 30);
         auto message = R::Utils::generateUUID(messageLength);
 
-        auto buffer = Buffer(30);
+        auto buffer = R::Buffer(30);
         buffer.write(message.c_str(), messageLength);
         client->sendMessage(buffer);
     }
