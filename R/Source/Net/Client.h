@@ -1,10 +1,12 @@
-#include "Network.h"
+#pragma once
 
-namespace R::Network {
+#include "Net.h"
+
+namespace R::Net {
 
     class Client {
        public:
-        Socket clientSocket;
+        Socket _socket;
         bool isRunning = false;
 
         static std::shared_ptr<Client> make() {
@@ -19,15 +21,15 @@ namespace R::Network {
 
 #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
 
-        bool run(const char *hostname, int port) {
+        inline bool run(const char *hostname, int port) {
             struct sockaddr_in socketAddress;
             struct hostent *server;
 
-            clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+            _socket = socket(AF_INET, SOCK_STREAM, 0);
 
             server = gethostbyname(hostname);
             if (server == NULL) {
-                Network::onError(clientSocket, false, "[Client] ERROR getting host name");
+                onError(_socket, false, "[Client] ERROR getting host name");
                 return false;
             }
 
@@ -36,8 +38,8 @@ namespace R::Network {
             bcopy((char *)server->h_addr, (char *)&socketAddress.sin_addr.s_addr, server->h_length);
             socketAddress.sin_port = htons(port);
 
-            if (connect(clientSocket, (struct sockaddr *)&socketAddress, sizeof(socketAddress)) < 0) {
-                Network::onError(clientSocket, false, "[Client] Couldn't connect to the host");
+            if (connect(_socket, (struct sockaddr *)&socketAddress, sizeof(socketAddress)) < 0) {
+                onError(_socket, false, "[Client] Couldn't connect to the host");
                 return false;
             }
 
@@ -48,11 +50,11 @@ namespace R::Network {
 
 #elif defined(PLATFORM_WINDOWS)
 
-        bool run(const char *hostname, int port) {
+        inline bool run(const char *hostname, int port) {
             WSADATA wsaData;
             int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
             if (iResult != NO_ERROR) {
-                onError(clientSocket, false, "[Client] Error on WSAStartup");
+                onError(_socket, false, "[Client] Error on WSAStartup");
                 return false;
             }
 
@@ -67,7 +69,7 @@ namespace R::Network {
 
             iResult = getaddrinfo(hostname, port, &hints, &result);
             if (iResult != 0) {
-                onError(clientSocket, false, "[Client] Error on getaddrinfo");
+                onError(_socket, false, "[Client] Error on getaddrinfo");
                 return false;
             }
 
@@ -76,7 +78,7 @@ namespace R::Network {
 
             for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
                 ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-                if (Network::checkForErrors(ConnectSocket, INVALID_SOCKET, false, "[Client] Error on socket creation")) {
+                if (checkForErrors(ConnectSocket, INVALID_SOCKET, false, "[Client] Error on socket creation")) {
                     freeaddrinfo(result);
                     return false;
                 }
@@ -90,7 +92,7 @@ namespace R::Network {
             }
 
             freeaddrinfo(result);
-            if (Network::checkForErrors(ConnectSocket, INVALID_SOCKET, true, "[Client] Couldn't connect to the server")) {
+            if (checkForErrors(ConnectSocket, INVALID_SOCKET, true, "[Client] Couldn't connect to the server")) {
                 return false;
             }
 
@@ -101,16 +103,16 @@ namespace R::Network {
 
 #endif
 
-        void terminate() {
-            Network::onError(clientSocket, true, "[Client] Closing the client socket!");
+        inline void terminate() {
+            onError(_socket, true, "[Client] Closing the client socket!");
         }
 
-        void sendMessage(Network::Buffer buff) {
-            Network::sendMessage(clientSocket, buff, "[Client] Couldn't send message");
+        inline int sendMessage(Buffer buff) {
+            return Net::sendMessage(_socket, buff, "[Client] Couldn't send message");
         }
 
-        Network::Buffer readMessage(Socket socket) {
-            return Network::readMessage(clientSocket, "[Client] Couldn't read message");
+        inline Buffer readMessage(Socket socket) {
+            return Net::readMessage(_socket, "[Client] Couldn't read message");
         }
     };
 

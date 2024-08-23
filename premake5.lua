@@ -1,6 +1,6 @@
-outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
+outputdir = "%{cfg.buildcfg}-%{cfg.system}"
 
-workspace "Server"
+workspace "R"
 	configurations
 	{
 		"Debug",
@@ -18,10 +18,13 @@ workspace "Server"
 
 		files
 		{
-			"%{wks.location}/NetworkBasics/Source/**.h",
-			"%{wks.location}/NetworkBasics/Source/**.cpp",
+			"%{wks.location}/R/Source/**.h",
+			"%{wks.location}/R/Source/**.cpp",
+			
 		}
 		includedirs
 		{
-			"%{wks.location}/NoBiggyServer/Source",
+			"%{wks.location}/R/Source",
+			"%{wks.location}/R/Source/Net",
+
 		}

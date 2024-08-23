@@ -1,15 +1,14 @@
-#define CLIENT
-#define SERVER
-
 #include "Client.h"
 #include "Server.h"
+#include "Utils.h"
 
 #include <thread>
 
 void server() {
-    bool isRunning = NB::Server::run();
-    if (!isRunning) {
-        printf("[Server] ERROR\n");
+    auto server = R::Net::Server::makeAndRun();
+    if (!server->isRunning) {
+        printf("[Server] Error starting the server\n");
+        return;
     }
 
     bool openConexion = true;
@@ -17,15 +16,14 @@ void server() {
 
     // iterate till infinite
     while (true) {
-        Socket newConnection = NB::Server::acceptNewConnection();
+        R::Net::Socket newConnection = server->acceptNewConnection();
         if (newConnection == -1) {
             continue;
         }
         while (openConexion) {
-            NB::Network::Buffer buff = NB::Server::readMessage(newConnection);
+            auto buff = server->readMessage(newConnection);
             if (buff.size > 0) {
-                std::cout << buff.size << std::endl;
-                std::cout << buff.ini.get() << std::endl;
+                printf("[Server] size: %i, message: %s\n", (int)buff.size, buff.ini);
             } else {
                 openConexion = false;
             }
@@ -35,12 +33,17 @@ void server() {
 
 int main() {
     std::thread SERVER_THREAD = std::thread(server);
-    sleep(5);
-    bool isRunning = NB::Client::run("localhost", 3000);
-    if (!isRunning) {
-        printf("[Client] ERROR\n");
+    sleep(1);
+    auto client = R::Net::Client::makeAndRun("localhost", 3000);
+    while (client->isRunning) {
+        sleep(2);
+        auto messageLength = R::Utils::randomNumber(10, 30);
+        auto message = R::Utils::generateUUID(messageLength);
+
+        auto buffer = Buffer(30);
+        buffer.write(message.c_str(), messageLength);
+        client->sendMessage(buffer);
     }
 
-    NB::Client::sendMessage({"My name is Roberto", 19});
     SERVER_THREAD.join();
 }

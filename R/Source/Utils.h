@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <queue>
+#include <execinfo.h>
+#include <unistd.h>
 
 namespace R::Utils {
 
@@ -77,5 +79,22 @@ namespace R::Utils {
 
     inline unsigned int randomUintNumber(int min, int max) {
         return (unsigned int)(rand() % (max - min + 1) + min);
+    }
+
+    inline void onExceptionHandler(int sig) {
+        void *array[10];
+        size_t size;
+
+        // get void*'s for all entries on the stack
+        size = backtrace(array, 10);
+
+        // print out all the frames to stderr
+        fprintf(stderr, "Error: signal %d:\n", sig);
+        backtrace_symbols_fd(array, size, STDERR_FILENO);
+        exit(1);
+    }
+
+    inline void stackTracing() {
+        signal(SIGSEGV, onExceptionHandler);
     }
 }  // namespace R::Utils
