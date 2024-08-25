@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Platform.h"
-
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+
+#include "Platform.h"
+#include "Macros.h"
 
 namespace R {
     class Buffer {
@@ -73,7 +74,7 @@ namespace R {
         template <typename T>
         bool inBoundOffset(std::size_t const offset) {
             if (offset + sizeof(T) >= maxSize || offset < 0) {
-                printf("[Buffer] Can't access out of bounds");
+                RLog("[Buffer] Can't access out of bounds");
                 return false;
             }
             return true;

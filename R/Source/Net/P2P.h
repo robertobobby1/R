@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "Utils.h"
+#include "Macros.h"
 
 namespace R::Net::P2P {
     inline const int SECURITY_HEADER_LENGTH = 23;

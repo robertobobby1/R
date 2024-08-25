@@ -6,6 +6,10 @@
 #include <execinfo.h>
 #include <unistd.h>
 
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
+
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #    pragma message("WIN32 || _WIN32 || __WIN32__ || __NT__")
 #    ifndef PLATFORM_WINDOWS
@@ -57,26 +61,17 @@
 #    pragma message("This is an unknown OS")
 #endif
 
-#if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
-#    include <sys/socket.h>
-#    include <netinet/in.h>
-#    include <netinet/tcp.h>
-#    include <arpa/inet.h>
-#    include <unistd.h>
-#    include <fcntl.h>
-#    include <netdb.h>
-#elif defined(PLATFORM_WINDOWS)
-#    include <WinSock2.h>
-#    include <ws2tcpip.h>
-#    pragma comment(lib, "winmm.lib")
-#    pragma comment(lib, "WS2_32.lib")
-#    include <Windows.h>
+
+#include <stdio.h>
+
+#ifdef DISABLE_LOGGING
+#    define RLog(f_, ...) ()
+
+#else
+#    define RLog(f_, ...) printf((f_), ##__VA_ARGS__)
+
 #endif
 
-
-#include <iostream>
-#include <stdio.h>
-#include <string.h>
 
 namespace R {
     class Buffer {
@@ -145,7 +140,7 @@ namespace R {
         template <typename T>
         bool inBoundOffset(std::size_t const offset) {
             if (offset + sizeof(T) >= maxSize || offset < 0) {
-                printf("[Buffer] Can't access out of bounds");
+                RLog("[Buffer] Can't access out of bounds");
                 return false;
             }
             return true;
@@ -303,7 +298,7 @@ namespace R::Utils {
         size = backtrace(array, 10);
 
         // print out all the frames to stderr
-        fprintf(stderr, "Error: signal %d:\n", sig);
+        RLog("[Expception Handler]: signal %d:\n", sig);
         backtrace_symbols_fd(array, size, STDERR_FILENO);
         exit(1);
     }
@@ -316,22 +311,39 @@ namespace R::Utils {
         unsigned char *buf = (unsigned char *)buffer.ini;
         int i, j;
         for (i = 0; i < buffer.size; i += 16) {
-            printf("%06x: ", i);
+            RLog("%06x: ", i);
             for (j = 0; j < 16; j++)
                 if (i + j < buffer.size)
-                    printf("%02x ", buf[i + j]);
+                    RLog("%02x ", buf[i + j]);
                 else
-                    printf("   ");
-            printf(" ");
+                    RLog("   ");
+            RLog(" ");
             for (j = 0; j < 16; j++)
                 if (i + j < buffer.size)
-                    printf("%c", isprint(buf[i + j]) ? buf[i + j] : '.');
-            printf("\n");
+                    RLog("%c", isprint(buf[i + j]) ? buf[i + j] : '.');
+            RLog("\n");
         }
     }
 }  // namespace R::Utils
 
 #include <iostream>
+
+#if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
+#    include <sys/socket.h>
+#    include <netinet/in.h>
+#    include <netinet/tcp.h>
+#    include <arpa/inet.h>
+#    include <unistd.h>
+#    include <fcntl.h>
+#    include <netdb.h>
+#elif defined(PLATFORM_WINDOWS)
+#    include <WinSock2.h>
+#    include <ws2tcpip.h>
+#    pragma comment(lib, "winmm.lib")
+#    pragma comment(lib, "WS2_32.lib")
+#    include <Windows.h>
+#endif
+
 
 namespace R::Net {
 
@@ -376,7 +388,7 @@ namespace R::Net {
     }
 
     inline void onError(Socket socket, bool closeSocket, const char *errorMessage) {
-        printf("%s - errno %i\n", errorMessage, errno);
+        RLog("%s - errno %i\n", errorMessage, errno);
         if (closeSocket) {
             close(socket);
         }
@@ -397,7 +409,7 @@ namespace R::Net {
         if (closeSocket) {
             closesocket(socket);
         }
-        printf("%s --- winsock2 error code is: %i\n", errorMessage, WSAGetLastError());
+        RLog("%s --- winsock2 error code is: %i\n", errorMessage, WSAGetLastError());
         WSACleanup();
     }
 #endif
@@ -473,7 +485,7 @@ namespace R::Net {
                 return false;
             }
 
-            printf("[Client] Connected to hostname %s and port %i\n", hostname, port);
+            RLog("[Client] Connected to hostname %s and port %i\n", hostname, port);
             isRunning = true;
             return true;
         }
@@ -526,7 +538,7 @@ namespace R::Net {
                 return false;
             }
 
-            printf("[Client] Connected to hostname %s and port %i\n", hostname, port);
+            RLog("[Client] Connected to hostname %s and port %i\n", hostname, port);
             isRunning = true;
             return true;
         }
@@ -546,7 +558,7 @@ namespace R::Net {
         }
     };
 
-}  // namespace R
+}  // namespace R::Net
 
 namespace R::Net {
 
@@ -583,7 +595,7 @@ namespace R::Net {
                 return false;
             }
 
-            printf("[Server] Started listening in port %i\n", port);
+            RLog("[Server] Started listening in port %i\n", port);
             isRunning = true;
             return true;
         }
@@ -618,7 +630,7 @@ namespace R::Net {
             if (checkForErrors(ioctlsocket(_socket, FIONBIO, &blocking_mode), -1, "[Server] Error while setting the blocking mode", true))
                 return false;
 
-            printf("[Server] Started listening in port %i\n", port);
+            RLog("[Server] Started listening in port %i\n", port);
             isRunning = true;
             return true;
         }
@@ -631,7 +643,7 @@ namespace R::Net {
 
         inline Socket acceptNewConnection(bool checkErrors = true) {
             if (!isRunning) {
-                printf("[Server] Cannot accept connections if server is not running");
+                RLog("[Server] Cannot accept connections if server is not running");
                 return -1;
             }
 

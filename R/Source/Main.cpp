@@ -7,7 +7,7 @@
 void server() {
     auto server = R::Net::Server::makeAndRun();
     if (!server->isRunning) {
-        printf("[Server] Error starting the server\n");
+        RLog("[Server] Error starting the server\n");
         return;
     }
 
@@ -23,7 +23,7 @@ void server() {
         while (openConexion) {
             auto buff = server->readMessage(newConnection);
             if (buff.size > 0) {
-                printf("[Server] size: %i, message: %s\n", (int)buff.size, buff.ini);
+                RLog("[Server] size: %i, message: %s\n", (int)buff.size, buff.ini);
             } else {
                 openConexion = false;
             }

@@ -4,6 +4,8 @@
 
 #include "Platform.h"
 #include "Buffer.h"
+#include "NetImports.h"
+#include "Macros.h"
 
 namespace R::Net {
 
@@ -48,7 +50,7 @@ namespace R::Net {
     }
 
     inline void onError(Socket socket, bool closeSocket, const char *errorMessage) {
-        printf("%s - errno %i\n", errorMessage, errno);
+        RLog("%s - errno %i\n", errorMessage, errno);
         if (closeSocket) {
             close(socket);
         }
@@ -69,7 +71,7 @@ namespace R::Net {
         if (closeSocket) {
             closesocket(socket);
         }
-        printf("%s --- winsock2 error code is: %i\n", errorMessage, WSAGetLastError());
+        RLog("%s --- winsock2 error code is: %i\n", errorMessage, WSAGetLastError());
         WSACleanup();
     }
 #endif

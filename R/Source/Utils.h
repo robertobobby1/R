@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "Buffer.h"
+#include "Macros.h"
 
 namespace R::Utils {
 
@@ -91,7 +92,7 @@ namespace R::Utils {
         size = backtrace(array, 10);
 
         // print out all the frames to stderr
-        fprintf(stderr, "Error: signal %d:\n", sig);
+        RLog("[Expception Handler]: signal %d:\n", sig);
         backtrace_symbols_fd(array, size, STDERR_FILENO);
         exit(1);
     }
@@ -104,17 +105,17 @@ namespace R::Utils {
         unsigned char *buf = (unsigned char *)buffer.ini;
         int i, j;
         for (i = 0; i < buffer.size; i += 16) {
-            printf("%06x: ", i);
+            RLog("%06x: ", i);
             for (j = 0; j < 16; j++)
                 if (i + j < buffer.size)
-                    printf("%02x ", buf[i + j]);
+                    RLog("%02x ", buf[i + j]);
                 else
-                    printf("   ");
-            printf(" ");
+                    RLog("   ");
+            RLog(" ");
             for (j = 0; j < 16; j++)
                 if (i + j < buffer.size)
-                    printf("%c", isprint(buf[i + j]) ? buf[i + j] : '.');
-            printf("\n");
+                    RLog("%c", isprint(buf[i + j]) ? buf[i + j] : '.');
+            RLog("\n");
         }
     }
 }  // namespace R::Utils

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Net.h"
+#include "Macros.h"
 
 namespace R::Net {
 
@@ -37,7 +38,7 @@ namespace R::Net {
                 return false;
             }
 
-            printf("[Server] Started listening in port %i\n", port);
+            RLog("[Server] Started listening in port %i\n", port);
             isRunning = true;
             return true;
         }
@@ -72,7 +73,7 @@ namespace R::Net {
             if (checkForErrors(ioctlsocket(_socket, FIONBIO, &blocking_mode), -1, "[Server] Error while setting the blocking mode", true))
                 return false;
 
-            printf("[Server] Started listening in port %i\n", port);
+            RLog("[Server] Started listening in port %i\n", port);
             isRunning = true;
             return true;
         }
@@ -85,7 +86,7 @@ namespace R::Net {
 
         inline Socket acceptNewConnection(bool checkErrors = true) {
             if (!isRunning) {
-                printf("[Server] Cannot accept connections if server is not running");
+                RLog("[Server] Cannot accept connections if server is not running");
                 return -1;
             }
 

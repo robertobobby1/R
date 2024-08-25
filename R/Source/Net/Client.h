@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Net.h"
+#include "Macros.h"
 
 namespace R::Net {
 
@@ -43,7 +44,7 @@ namespace R::Net {
                 return false;
             }
 
-            printf("[Client] Connected to hostname %s and port %i\n", hostname, port);
+            RLog("[Client] Connected to hostname %s and port %i\n", hostname, port);
             isRunning = true;
             return true;
         }
@@ -96,7 +97,7 @@ namespace R::Net {
                 return false;
             }
 
-            printf("[Client] Connected to hostname %s and port %i\n", hostname, port);
+            RLog("[Client] Connected to hostname %s and port %i\n", hostname, port);
             isRunning = true;
             return true;
         }
@@ -116,4 +117,4 @@ namespace R::Net {
         }
     };
 
-}  // namespace R
+}  // namespace R::Net
