@@ -1,5 +1,7 @@
 #pragma once
+
 #include <iostream>
+
 #include "Platform.h"
 #include "Buffer.h"
 
