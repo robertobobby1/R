@@ -111,7 +111,7 @@ namespace R::Net {
             return Net::sendMessage(_socket, buff, "[Client] Couldn't send message");
         }
 
-        inline Buffer readMessage(Socket socket) {
+        inline Buffer readMessage() {
             return Net::readMessage(_socket, "[Client] Couldn't read message");
         }
     };

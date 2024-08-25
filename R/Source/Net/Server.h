@@ -96,8 +96,8 @@ namespace R::Net {
             return AcceptSocket;
         }
 
-        inline int sendMessage(Buffer buff) {
-            return Net::sendMessage(_socket, buff, "[Server] Couldn't send message");
+        inline int sendMessage(Socket socket, Buffer buff) {
+            return Net::sendMessage(socket, buff, "[Server] Couldn't send message");
         }
 
         inline Buffer readMessage(Socket socket) {

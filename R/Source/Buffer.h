@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+
 namespace R {
     class Buffer {
        public:
@@ -76,24 +77,17 @@ namespace R {
             return static_cast<T>(ini[offset]);
         }
 
+        // expects real values such as uint8_t....
         template <typename T>
         void write(T const value) {
-            this->write(value, sizeof(T));
-        }
-
-        // specialization for char*
-        void write(const char *value, int appendLength) {
-            increaseBufferSizeIfNecessary(appendLength);
-
-            memcpy(ini + size, value, appendLength);
-            size += appendLength;
+            this->write(&value, sizeof(T));
         }
 
         template <typename T>
         void write(T const value, int appendLength) {
             increaseBufferSizeIfNecessary(appendLength);
 
-            memcpy(ini + size, &value, appendLength);
+            memcpy(ini + size, value, appendLength);
             size += appendLength;
         }
 
@@ -102,6 +96,7 @@ namespace R {
                 // allocate new & bigger memory
                 maxSize = (appendLength + size) * 2;
                 char *newBuffer = new char[maxSize];
+                memcpy(newBuffer, ini, size);
 
                 delete[] ini;
                 ini = newBuffer;

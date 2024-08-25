@@ -5,6 +5,8 @@
 #include <execinfo.h>
 #include <unistd.h>
 
+#include "Buffer.h"
+
 namespace R::Utils {
 
     inline bool isInRange(int value, int lowRange, int highRange) {
@@ -96,5 +98,23 @@ namespace R::Utils {
 
     inline void stackTracing() {
         signal(SIGSEGV, onExceptionHandler);
+    }
+
+    inline void hexDump(Buffer buffer) {
+        unsigned char *buf = (unsigned char *)buffer.ini;
+        int i, j;
+        for (i = 0; i < buffer.size; i += 16) {
+            printf("%06x: ", i);
+            for (j = 0; j < 16; j++)
+                if (i + j < buffer.size)
+                    printf("%02x ", buf[i + j]);
+                else
+                    printf("   ");
+            printf(" ");
+            for (j = 0; j < 16; j++)
+                if (i + j < buffer.size)
+                    printf("%c", isprint(buf[i + j]) ? buf[i + j] : '.');
+            printf("\n");
+        }
     }
 }  // namespace R::Utils
