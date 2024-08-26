@@ -25,12 +25,12 @@ namespace R::Net::P2P {
         ServerClientHeaderFlags_Action = 1 << 7,  // 10000000
     };
 
-    enum LobbyPrivacyType {
+    enum class LobbyPrivacyType {
         Private,
         Public
     };
 
-    enum ClientActionType {
+    enum class ClientActionType {
         Create,
         Connect,
         Disconnect,
