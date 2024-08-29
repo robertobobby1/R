@@ -86,7 +86,9 @@ namespace R {
             if (offset + sizeof(T) >= maxSize || offset < 0)
                 RLog("[Buffer] Can't access out of bounds");
 
-            return static_cast<T>(ini[offset]);
+            T value;
+            memcpy(&value, ini + offset, sizeof(T));
+            return value;
         }
 
         // expects real values such as uint8_t and not pointers

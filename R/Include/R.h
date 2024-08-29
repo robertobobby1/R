@@ -152,7 +152,9 @@ namespace R {
             if (offset + sizeof(T) >= maxSize || offset < 0)
                 RLog("[Buffer] Can't access out of bounds");
 
-            return static_cast<T>(ini[offset]);
+            T value;
+            memcpy(&value, ini + offset, sizeof(T));
+            return value;
         }
 
         // expects real values such as uint8_t and not pointers
@@ -801,7 +803,7 @@ namespace R::Net::P2P {
     // start Server secion
 
     struct ServerConnectPayload {
-        uint32_t ipAddress;
+        in_addr ipAddress;
         uint16_t port;
         uint32_t delay;
 
@@ -870,11 +872,12 @@ namespace R::Net::P2P {
             return {0, 0, 0};  // empty/error
 
         auto payload = getPayload(buffer);
-        return {
-            payload.read<uint32_t>(0),  // ipAddress
-            payload.read<uint16_t>(4),  // port
-            payload.read<uint32_t>(6),  // delay
-        };
+
+        auto ipAddress = payload.read<in_addr>(0);
+        auto port = payload.read<uint16_t>(4);
+        auto delay = payload.read<uint32_t>(6);
+
+        return {ipAddress, ntohs(port), ntohl(delay)};
     }
 
     // end Server secion
