@@ -4,8 +4,11 @@
 
 #include "Utils.h"
 #include "Macros.h"
+#include "NetImports.h"
 
 namespace R::Net::P2P {
+
+    inline const int MAX_PACKAGE_LENGTH = 40;
     inline const int SECURITY_HEADER_LENGTH = 23;
     inline const char* SECURITY_HEADER = "0sdFGeVi3ItN1qwsHp3mcDF";
     inline const int UUID_LENGTH = 5;
@@ -43,7 +46,7 @@ namespace R::Net::P2P {
     };
 
     inline bool isValidAuthedRequest(Buffer& buffer) {
-        return Utils::isInRange(buffer.size, 24, 29) && strncmp(buffer.ini, SECURITY_HEADER, SECURITY_HEADER_LENGTH) == 0;
+        return Utils::isInRange(buffer.size, SECURITY_HEADER_LENGTH + 1, MAX_PACKAGE_LENGTH) && strncmp(buffer.ini, SECURITY_HEADER, SECURITY_HEADER_LENGTH) == 0;
     }
 
     inline Buffer createSecuredBuffer() {
@@ -56,6 +59,15 @@ namespace R::Net::P2P {
 
     inline uint8_t getProtocolHeader(Buffer& buffer) {
         return buffer.ini[SECURITY_HEADER_LENGTH];
+    }
+
+    inline Buffer getPayload(Buffer& buffer) {
+        auto payloadBuffer = Buffer(buffer.size);
+        auto headerSize = SECURITY_HEADER_LENGTH + 1;
+
+        payloadBuffer.write(buffer.ini + headerSize, buffer.size - headerSize);
+
+        return payloadBuffer;
     }
 
     // start Client section
@@ -146,9 +158,22 @@ namespace R::Net::P2P {
 
     // start Server secion
 
+    struct ServerConnectPayload {
+        in_addr ipAddress;
+        uint16_t port;
+        uint32_t delay;
+
+        void Print() {
+            RLog("Other peer's information:\n");
+            RLog("Peer Port: %d\n", this->port);
+            RLog("Peer IP Address: %s\n", inet_ntoa({this->ipAddress}));
+            RLog("Peer delay: %i\n", this->delay);
+        }
+    };
+
     inline uint8_t createServerProtocolHeader(ServerActionType serverActionType) {
         uint8_t headerFlags = 0;
-        if (serverActionType == ServerActionType::SendUUID) {
+        if (serverActionType == ServerActionType::Connect) {
             R::Utils::setFlag(headerFlags, ClientServerHeaderFlags_Bit1);  // 1
         }
 
@@ -169,7 +194,7 @@ namespace R::Net::P2P {
 
     inline Buffer createServerSendUUIDBuffer(std::string& uuid) {
         auto buffer = createSecuredBuffer();
-        auto headerFlags = createServerProtocolHeader(ServerActionType::Connect);
+        auto headerFlags = createServerProtocolHeader(ServerActionType::SendUUID);
 
         buffer.write(headerFlags);
         buffer.write(uuid.c_str(), UUID_LENGTH);
@@ -179,9 +204,36 @@ namespace R::Net::P2P {
 
     inline ServerActionType getServerActionTypeFromHeaderByte(uint8_t headerByte) {
         if (R::Utils::isFlagSet(headerByte, ServerClientHeaderFlags::ServerClientHeaderFlags_Action)) {
-            return ServerActionType::SendUUID;
+            return ServerActionType::Connect;
         }
-        return ServerActionType::Connect;
+        return ServerActionType::SendUUID;
+    }
+
+    inline std::string getUUIDFromSendUUIDBuffer(Buffer& buffer) {
+        auto protocolHeader = getProtocolHeader(buffer);
+        auto actionType = getServerActionTypeFromHeaderByte(protocolHeader);
+
+        if (actionType != ServerActionType::SendUUID)
+            return "";
+
+        auto payload = getPayload(buffer);
+        return std::string(payload.ini, UUID_LENGTH);
+    }
+
+    inline ServerConnectPayload getPayloadFromServerConnectBuffer(Buffer& buffer) {
+        auto protocolHeader = getProtocolHeader(buffer);
+        auto actionType = getServerActionTypeFromHeaderByte(protocolHeader);
+
+        if (actionType != ServerActionType::Connect)
+            return {0, 0, 0};  // empty/error
+
+        auto payload = getPayload(buffer);
+
+        auto ipAddress = payload.read<in_addr>(0);
+        auto port = payload.read<uint16_t>(4);
+        auto delay = payload.read<uint32_t>(6);
+
+        return {ipAddress, ntohs(port), ntohl(delay)};
     }
 
     // end Server secion

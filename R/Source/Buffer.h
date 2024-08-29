@@ -83,46 +83,16 @@ namespace R {
         // -- Methods
         template <typename T>
         T read(std::size_t const offset) {
-            if (!inBoundOffset<T>(offset))
-                return 0;
+            if (offset + sizeof(T) >= maxSize || offset < 0)
+                RLog("[Buffer] Can't access out of bounds");
 
             return static_cast<T>(ini[offset]);
-        }
-
-        template <>
-        uint16_t read<uint16_t>(std::size_t const offset) {
-            if (!inBoundOffset<uint16_t>(offset))
-                return 0;
-
-            auto value = static_cast<uint16_t>(ini[offset]);
-            return ntohs(value);
-        }
-
-        template <>
-        uint32_t read<uint32_t>(std::size_t const offset) {
-            if (!inBoundOffset<uint32_t>(offset))
-                return 0;
-
-            auto value = static_cast<uint32_t>(ini[offset]);
-            return ntohs(value);
         }
 
         // expects real values such as uint8_t and not pointers
         template <typename T>
         void write(T const value) {
             this->write(&value, sizeof(T));
-        }
-
-        template <>
-        void write<uint16_t>(uint16_t const value) {
-            uint16_t invertedBytes = htons(value);
-            this->write(&invertedBytes, sizeof(uint16_t));
-        }
-
-        template <>
-        void write<uint32_t>(uint32_t const value) {
-            uint32_t invertedBytes = htonl(value);
-            this->write(&invertedBytes, sizeof(uint32_t));
         }
 
         // expects pointers to values

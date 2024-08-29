@@ -5,9 +5,9 @@
 #include "Platform.h"
 
 #ifdef DISABLE_LOGGING
-#    define RLog(f_, ...) ()
+#    define RLog(msg, ...) ()
 
 #else
-#    define RLog(f_, ...) printf((f_), ##__VA_ARGS__)
+#    define RLog(msg, ...) printf(msg, ##__VA_ARGS__)
 
 #endif

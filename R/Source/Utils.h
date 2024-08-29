@@ -62,6 +62,17 @@ namespace R::Utils {
         queue.push(value);
     }
 
+    template <class ADAPTER>
+    const auto &getQueueCObject(ADAPTER &a) {
+        struct hack : private ADAPTER {
+            static auto &get(ADAPTER &a) {
+                return a.*(&hack::c);
+            }
+        };
+
+        return hack::get(a);
+    }
+
     inline std::string generateUUID(int length) {
         static const char alphanum[] =
             "0123456789"
