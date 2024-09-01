@@ -73,6 +73,14 @@ namespace R::Utils {
         return hack::get(a);
     }
 
+    template <typename T>
+    void removeFromVector(std::vector<T> &vector, T value) {
+        auto it = std::find(vector.begin(), vector.end(), value);
+        if (it != vector.end()) {
+            vector.erase(it);
+        }
+    }
+
     template <typename T, typename K>
     inline bool keyExistsInMap(std::unordered_map<T, K> &map, T &key) {
         auto it = map.find(key);
