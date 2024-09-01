@@ -73,6 +73,15 @@ namespace R::Utils {
         return hack::get(a);
     }
 
+    template <typename T, typename K>
+    inline bool keyExistsInMap(std::unordered_map<T, K> &map, T &key) {
+        auto it = map.find(key);
+        if (it == map.end()) {
+            return false;
+        }
+        return true;
+    }
+
     inline std::string generateUUID(int length) {
         static const char alphanum[] =
             "0123456789"
