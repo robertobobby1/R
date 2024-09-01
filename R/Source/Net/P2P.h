@@ -112,17 +112,26 @@ namespace R::Net::P2P {
         return createClientBuffer(LobbyPrivacyType::Private, ClientActionType::Disconnect);
     }
 
-    inline Buffer createClientCreateLobbyBuffer(LobbyPrivacyType privacyType) {
-        return createClientBuffer(privacyType, ClientActionType::Create);
+    inline Buffer createClientCreateLobbyBuffer(LobbyPrivacyType privacyType, uint32_t port) {
+        auto buffer = createClientBuffer(privacyType, ClientActionType::Create);
+
+        buffer.write(htonl(port));
+
+        return buffer;
     }
 
-    inline Buffer createClientPublicConnectBuffer() {
-        return createClientBuffer(LobbyPrivacyType::Public, ClientActionType::Connect);
+    inline Buffer createClientPublicConnectBuffer(uint32_t port) {
+        auto buffer = createClientBuffer(LobbyPrivacyType::Public, ClientActionType::Connect);
+
+        buffer.write(htonl(port));
+
+        return buffer;
     }
 
-    inline Buffer createClientPrivateConnectBuffer(std::string& uuid) {
+    inline Buffer createClientPrivateConnectBuffer(std::string& uuid, uint32_t port) {
         auto buffer = createClientBuffer(LobbyPrivacyType::Private, ClientActionType::Connect);
 
+        buffer.write(htonl(port));
         buffer.write(uuid.c_str(), UUID_LENGTH);
 
         return buffer;
