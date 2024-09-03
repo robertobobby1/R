@@ -2,6 +2,7 @@
 
 #include "Net.h"
 #include "Macros.h"
+#include "NetImports.h"
 
 #include <string>
 

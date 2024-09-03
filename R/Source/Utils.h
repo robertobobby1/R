@@ -7,6 +7,7 @@
 
 #include "Buffer.h"
 #include "Macros.h"
+#include "NetImports.h"
 
 namespace R::Utils {
 
@@ -112,10 +113,7 @@ namespace R::Utils {
         return (unsigned int)(rand() % (max - min + 1) + min);
     }
 
-    #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
-
-    #include <execinfo.h>
-    #include <unistd.h>
+#if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
 
     inline void onExceptionHandler(int sig) {
         void *array[10];
@@ -134,7 +132,7 @@ namespace R::Utils {
         signal(SIGSEGV, onExceptionHandler);
     }
 
-    #endif
+#endif
 
     inline void hexDump(Buffer buffer) {
         unsigned char *buf = (unsigned char *)buffer.ini;

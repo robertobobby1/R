@@ -8,6 +8,7 @@
 #    include <netinet/tcp.h>
 #    include <arpa/inet.h>
 #    include <unistd.h>
+#    include <execinfo.h>
 #    include <fcntl.h>
 #    include <netdb.h>
 #elif defined(PLATFORM_WINDOWS)
