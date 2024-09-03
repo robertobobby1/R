@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <cstdint>
 #include <queue>
 #include <mutex>
@@ -60,6 +61,7 @@
 #    pragma message("This is an unknown OS")
 #endif
 
+
 #include <stdio.h>
 
 #ifdef DISABLE_LOGGING
@@ -71,9 +73,10 @@
 #endif
 
 #define BIND_FN(fn)                                             \
-    [this](auto &&...args) -> decltype(auto) {                  \
+    [this](auto&&... args) -> decltype(auto) {                  \
         return this->fn(std::forward<decltype(args)>(args)...); \
     }
+
 
 namespace R {
     class Buffer {
@@ -206,6 +209,7 @@ namespace R {
 #    include <io.h>
 #endif
 
+
 namespace R::Utils {
 
     inline bool isInRange(int value, int lowRange, int highRange) {
@@ -232,7 +236,7 @@ namespace R::Utils {
             } else if constexpr (std::is_same_v<T, int>) {
                 return -1;
             } else {
-                return nullptr;
+                return NULL;
             }
         }
 
@@ -329,6 +333,16 @@ namespace R::Utils {
         signal(SIGSEGV, onExceptionHandler);
     }
 
+    inline void avoidSigPipe() {
+        signal(SIGPIPE, SIG_IGN);
+    }
+
+#elif defined(PLATFORM_WINDOWS)
+
+    // make it multipplatform but useless
+    inline void stackTracing() {}
+    inline void avoidSigPipe() {}
+
 #endif
 
     inline void hexDump(Buffer buffer) {
@@ -407,6 +421,7 @@ namespace R::Net {
 
     inline uint32_t getRTTOfClient(Socket _socket) {
         // TODO how to get RTT in windows
+        return 0;
     }
 
     inline bool setServerNonBlockingMode(Socket socket) {
@@ -592,7 +607,7 @@ namespace R::Net::P2P {
 
     inline const int MAX_PACKAGE_LENGTH = 40;
     inline const int SECURITY_HEADER_LENGTH = 23;
-    inline const char *SECURITY_HEADER = "0sdFGeVi3ItN1qwsHp3mcDF";
+    inline const char* SECURITY_HEADER = "0sdFGeVi3ItN1qwsHp3mcDF";
     inline const int UUID_LENGTH = 5;
 
     enum ClientClientHeaderFlags {
@@ -637,7 +652,7 @@ namespace R::Net::P2P {
         SendUUID,
     };
 
-    inline bool isValidAuthedRequest(Buffer &buffer) {
+    inline bool isValidAuthedRequest(Buffer& buffer) {
         return Utils::isInRange(buffer.size, SECURITY_HEADER_LENGTH + 1, MAX_PACKAGE_LENGTH) && strncmp(buffer.ini, SECURITY_HEADER, SECURITY_HEADER_LENGTH) == 0;
     }
 
@@ -649,11 +664,11 @@ namespace R::Net::P2P {
         return buffer;
     }
 
-    inline uint8_t getProtocolHeader(Buffer &buffer) {
+    inline uint8_t getProtocolHeader(Buffer& buffer) {
         return buffer.ini[SECURITY_HEADER_LENGTH];
     }
 
-    inline Buffer getPayload(Buffer &buffer) {
+    inline Buffer getPayload(Buffer& buffer) {
         auto payloadBuffer = Buffer(buffer.size);
         auto headerSize = SECURITY_HEADER_LENGTH + 1;
 
@@ -720,7 +735,7 @@ namespace R::Net::P2P {
         return buffer;
     }
 
-    inline Buffer createClientPrivateConnectBuffer(std::string &uuid, uint16_t clientPort) {
+    inline Buffer createClientPrivateConnectBuffer(std::string& uuid, uint16_t clientPort) {
         auto buffer = createClientBuffer(LobbyPrivacyType::Private, ClientActionType::Connect);
 
         buffer.write(htons(clientPort));
@@ -796,7 +811,7 @@ namespace R::Net::P2P {
         return buffer;
     }
 
-    inline Buffer createServerSendUUIDBuffer(std::string &uuid) {
+    inline Buffer createServerSendUUIDBuffer(std::string& uuid) {
         auto buffer = createSecuredBuffer();
         auto headerFlags = createServerProtocolHeader(ServerActionType::SendUUID);
 
@@ -813,7 +828,7 @@ namespace R::Net::P2P {
         return ServerActionType::SendUUID;
     }
 
-    inline std::string getUUIDFromSendUUIDBuffer(Buffer &buffer) {
+    inline std::string getUUIDFromSendUUIDBuffer(Buffer& buffer) {
         auto protocolHeader = getProtocolHeader(buffer);
         auto actionType = getServerActionTypeFromHeaderByte(protocolHeader);
 
@@ -824,7 +839,7 @@ namespace R::Net::P2P {
         return std::string(payload.ini, UUID_LENGTH);
     }
 
-    inline ServerConnectPayload getPayloadFromServerConnectBuffer(Buffer &buffer) {
+    inline ServerConnectPayload getPayloadFromServerConnectBuffer(Buffer& buffer) {
         auto protocolHeader = getProtocolHeader(buffer);
         auto actionType = getServerActionTypeFromHeaderByte(protocolHeader);
 
@@ -899,7 +914,7 @@ namespace R::Net::P2P {
             return instance;
         }
 
-        static inline bool isKeepAlivePackage(Buffer &buffer) {
+        static inline bool isKeepAlivePackage(Buffer& buffer) {
             return isValidAuthedRequest(buffer) && getProtocolHeader(buffer) == KeepAliveHeader;
         }
 
@@ -910,7 +925,7 @@ namespace R::Net::P2P {
             return sendKeepAlivePackage(socket, buffer);
         }
 
-        static inline int sendKeepAlivePackage(Socket socket, Buffer &buffer) {
+        static inline int sendKeepAlivePackage(Socket socket, Buffer& buffer) {
             return Net::sendMessage(socket, buffer, "[Keep Alive] Client socket disconected!");
         }
 
@@ -929,7 +944,7 @@ namespace R::Net::P2P {
 
             while (keepRunning) {
                 std::this_thread::sleep_for(std::chrono::seconds(timerInSeconds));
-                for (auto &socket : keepAliveSockets) {
+                for (auto& socket : keepAliveSockets) {
                     sendResponse = sendKeepAlivePackage(socket, buffer);
                     if (sendResponse != -1) {
                         continue;
@@ -1066,7 +1081,7 @@ namespace R::Net {
 
             Socket AcceptSocket = accept(_socket, (struct sockaddr *)&clientAddress, &addressLength);
             if (checkErrors && checkForErrors(AcceptSocket, SocketError, "[Server] Error while accepting new connections", true))
-                return {(Socket)-1};
+                return {(Socket) - 1};
 
             return {AcceptSocket, clientAddress.sin_addr};
         }

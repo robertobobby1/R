@@ -62,6 +62,7 @@ namespace R::Net {
 
     inline uint32_t getRTTOfClient(Socket _socket) {
         // TODO how to get RTT in windows
+        return 0;
     }
 
     inline bool setServerNonBlockingMode(Socket socket) {

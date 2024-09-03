@@ -35,7 +35,7 @@ namespace R::Utils {
             } else if constexpr (std::is_same_v<T, int>) {
                 return -1;
             } else {
-                return nullptr;
+                return NULL;
             }
         }
 
@@ -131,6 +131,16 @@ namespace R::Utils {
     inline void stackTracing() {
         signal(SIGSEGV, onExceptionHandler);
     }
+
+    inline void avoidSigPipe() {
+        signal(SIGPIPE, SIG_IGN);
+    }
+
+#elif defined(PLATFORM_WINDOWS)
+
+    // make it multipplatform but useless
+    inline void stackTracing() {}
+    inline void avoidSigPipe() {}
 
 #endif
 
