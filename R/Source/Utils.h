@@ -2,8 +2,8 @@
 
 #include <cstdint>
 #include <queue>
-#include <execinfo.h>
-#include <unistd.h>
+#include <mutex>
+#include <unordered_map>
 
 #include "Buffer.h"
 #include "Macros.h"
@@ -112,6 +112,11 @@ namespace R::Utils {
         return (unsigned int)(rand() % (max - min + 1) + min);
     }
 
+    #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
+
+    #include <execinfo.h>
+    #include <unistd.h>
+
     inline void onExceptionHandler(int sig) {
         void *array[10];
         size_t size;
@@ -129,9 +134,11 @@ namespace R::Utils {
         signal(SIGSEGV, onExceptionHandler);
     }
 
+    #endif
+
     inline void hexDump(Buffer buffer) {
         unsigned char *buf = (unsigned char *)buffer.ini;
-        int i, j;
+        unsigned int i, j;
         for (i = 0; i < buffer.size; i += 16) {
             RLog("%06x: ", i);
             for (j = 0; j < 16; j++)

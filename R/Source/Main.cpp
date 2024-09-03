@@ -13,11 +13,10 @@ void server() {
     }
 
     bool openConexion = true;
-    char buffer[512];
 
     // iterate till infinite
     while (true) {
-        R::Net::Socket newConnection = server->acceptNewConnection();
+        auto newConnection = server->acceptNewConnection().socket;
         if (newConnection == -1) {
             continue;
         }
@@ -34,10 +33,11 @@ void server() {
 
 int main() {
     std::thread SERVER_THREAD = std::thread(server);
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+
     auto client = R::Net::Client::makeAndRun("localhost", 3000);
     while (client->isRunning) {
-        sleep(2);
+        std::this_thread::sleep_for(std::chrono::seconds(2));
         auto messageLength = R::Utils::randomNumber(10, 30);
         auto message = R::Utils::generateUUID(messageLength);
 

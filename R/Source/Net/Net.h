@@ -11,9 +11,11 @@ namespace R::Net {
 
 #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
     typedef int Socket;
+#    define readSocket(socket, buffer, bufferSize) read(socket, buffer, bufferSize)
 #    define SocketError -1
 #elif defined(PLATFORM_WINDOWS)
     typedef SOCKET Socket;
+#    define readSocket(socket, buffer, bufferSize) _read(socket, buffer, bufferSize)
 #    define SocketError INVALID_SOCKET
 #endif
 
@@ -62,9 +64,9 @@ namespace R::Net {
         // TODO how to get RTT in windows
     }
 
-    inline void setServerNonBlockingMode(Socket socket) {
+    inline bool setServerNonBlockingMode(Socket socket) {
         unsigned long mode = 1;
-        return (ioctlsocket(fd, FIONBIO, &mode) == 0);
+        return (ioctlsocket(socket, FIONBIO, &mode) == 0);
     }
 
     inline void onError(Socket socket, bool closeSocket, const char *errorMessage) {
@@ -87,7 +89,7 @@ namespace R::Net {
     inline Buffer readMessage(Socket socket, const char *message) {
         char stackBuffer[255];
         auto buffer = Buffer(255);
-        int bufferSize = read(socket, stackBuffer, 255);
+        int bufferSize = readSocket(socket, stackBuffer, 255);
         if (bufferSize < 0) {
             onError(socket, false, message);
         } else {

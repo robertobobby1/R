@@ -183,9 +183,11 @@ namespace R::Net::P2P {
         uint32_t delay;
 
         void Print() {
+            char tempBuff[INET_ADDRSTRLEN];
+
             RLog("\nStart peer info ---- \n\n");
             RLog("Peer Port: %i\n", this->port);
-            RLog("Peer IP Address: %s\n", inet_ntoa(this->ipAddress));
+            RLog("Peer IP Address: %s\n", inet_ntop(AF_INET, &this->ipAddress, tempBuff, INET_ADDRSTRLEN));
             RLog("Peer delay: %i\n", this->delay);
             RLog("\nEnd peer info   ---- \n\n");
         }

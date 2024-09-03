@@ -16,4 +16,5 @@
 #    pragma comment(lib, "winmm.lib")
 #    pragma comment(lib, "WS2_32.lib")
 #    include <Windows.h>
+#    include <io.h>
 #endif

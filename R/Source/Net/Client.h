@@ -3,6 +3,8 @@
 #include "Net.h"
 #include "Macros.h"
 
+#include <string>
+
 namespace R::Net {
 
     class Client {
@@ -75,7 +77,7 @@ namespace R::Net {
             hints.ai_socktype = SOCK_STREAM;
             hints.ai_protocol = IPPROTO_TCP;
 
-            iResult = getaddrinfo(hostname, port, &hints, &result);
+            iResult = getaddrinfo(hostname, std::to_string(port).c_str(), &hints, &result);
             if (iResult != 0) {
                 onError(_socket, false, "[Client] Error on getaddrinfo");
                 return false;
@@ -86,7 +88,7 @@ namespace R::Net {
 
             for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
                 ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-                if (checkForErrors(ConnectSocket, INVALID_SOCKET, false, "[Client] Error on socket creation")) {
+                if (checkForErrors(ConnectSocket, INVALID_SOCKET, "[Client] Error on socket creation", false)) {
                     freeaddrinfo(result);
                     return false;
                 }
@@ -100,7 +102,7 @@ namespace R::Net {
             }
 
             freeaddrinfo(result);
-            if (checkForErrors(ConnectSocket, INVALID_SOCKET, true, "[Client] Couldn't connect to the server")) {
+            if (checkForErrors(ConnectSocket, INVALID_SOCKET, "[Client] Couldn't connect to the server", true)) {
                 return false;
             }
 
