@@ -20,6 +20,13 @@ namespace R::Net {
             return client;
         }
 
+        static std::shared_ptr<Client> makeAndSet(Socket socket) {
+            auto client = make();
+            client->_socket = socket;
+            client->isRunning = true;
+            return client;
+        }
+
 #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
 
         inline bool run(const char *hostname, int port) {
@@ -109,11 +116,19 @@ namespace R::Net {
         }
 
         inline int sendMessage(Buffer buff) {
-            return Net::sendMessage(_socket, buff, "[Client] Couldn't send message");
+            auto sendResponse = Net::sendMessage(_socket, buff, "[Client] Couldn't send message");
+            if (sendResponse == -1) {
+                isRunning = false;
+            }
+            return sendResponse;
         }
 
         inline Buffer readMessage() {
-            return Net::readMessage(_socket, "[Client] Couldn't read message");
+            auto readResponse = Net::readMessage(_socket, "[Client] Couldn't read message");
+            if (readResponse.size < 0) {
+                isRunning = false;
+            }
+            return readResponse;
         }
     };
 

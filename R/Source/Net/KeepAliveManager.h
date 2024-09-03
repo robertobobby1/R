@@ -35,6 +35,25 @@ namespace R::Net::P2P {
             return isValidAuthedRequest(buffer) && getProtocolHeader(buffer) == KeepAliveHeader;
         }
 
+        static inline int sendKeepAlivePackage(Socket socket) {
+            auto buffer = createSecuredBuffer();
+            buffer.write(KeepAliveHeader);
+
+            return sendKeepAlivePackage(socket, buffer);
+        }
+
+        static inline int sendKeepAlivePackage(Socket socket, Buffer& buffer) {
+            return Net::sendMessage(socket, buffer, "[Keep Alive] Client socket disconected!");
+        }
+
+        static inline bool isSocketActive(Socket socket) {
+            auto sendResponse = sendKeepAlivePackage(socket);
+            if (sendResponse == -1) {
+                return false;
+            }
+            return true;
+        }
+
         inline void run() {
             int sendResponse = 0;
             auto buffer = createSecuredBuffer();
@@ -43,7 +62,7 @@ namespace R::Net::P2P {
             while (keepRunning) {
                 std::this_thread::sleep_for(std::chrono::seconds(timerInSeconds));
                 for (auto& socket : keepAliveSockets) {
-                    sendResponse = Net::sendMessage(socket, buffer, "[Keep Alive] Client socket disconected!");
+                    sendResponse = sendKeepAlivePackage(socket, buffer);
                     if (sendResponse != -1) {
                         continue;
                     }
