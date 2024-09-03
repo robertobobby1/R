@@ -3,8 +3,8 @@
 
 #include <cstdint>
 #include <queue>
-#include <execinfo.h>
-#include <unistd.h>
+#include <mutex>
+#include <unordered_map>
 
 #include <iostream>
 #include <stdio.h>
@@ -295,6 +295,11 @@ namespace R::Utils {
         return (unsigned int)(rand() % (max - min + 1) + min);
     }
 
+    #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
+
+    #include <execinfo.h>
+    #include <unistd.h>
+
     inline void onExceptionHandler(int sig) {
         void *array[10];
         size_t size;
@@ -312,9 +317,11 @@ namespace R::Utils {
         signal(SIGSEGV, onExceptionHandler);
     }
 
+    #endif
+
     inline void hexDump(Buffer buffer) {
         unsigned char *buf = (unsigned char *)buffer.ini;
-        int i, j;
+        unsigned int i, j;
         for (i = 0; i < buffer.size; i += 16) {
             RLog("%06x: ", i);
             for (j = 0; j < 16; j++)
@@ -347,6 +354,7 @@ namespace R::Utils {
 #    pragma comment(lib, "winmm.lib")
 #    pragma comment(lib, "WS2_32.lib")
 #    include <Windows.h>
+#    include <io.h>
 #endif
 
 
@@ -354,9 +362,11 @@ namespace R::Net {
 
 #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
     typedef int Socket;
+#    define readSocket(socket, buffer, bufferSize) read(socket, buffer, bufferSize)
 #    define SocketError -1
 #elif defined(PLATFORM_WINDOWS)
     typedef SOCKET Socket;
+#    define readSocket(socket, buffer, bufferSize) _read(socket, buffer, bufferSize)
 #    define SocketError INVALID_SOCKET
 #endif
 
@@ -405,9 +415,9 @@ namespace R::Net {
         // TODO how to get RTT in windows
     }
 
-    inline void setServerNonBlockingMode(Socket socket) {
+    inline bool setServerNonBlockingMode(Socket socket) {
         unsigned long mode = 1;
-        return (ioctlsocket(fd, FIONBIO, &mode) == 0);
+        return (ioctlsocket(socket, FIONBIO, &mode) == 0);
     }
 
     inline void onError(Socket socket, bool closeSocket, const char *errorMessage) {
@@ -430,7 +440,7 @@ namespace R::Net {
     inline Buffer readMessage(Socket socket, const char *message) {
         char stackBuffer[255];
         auto buffer = Buffer(255);
-        int bufferSize = read(socket, stackBuffer, 255);
+        int bufferSize = readSocket(socket, stackBuffer, 255);
         if (bufferSize < 0) {
             onError(socket, false, message);
         } else {
@@ -448,6 +458,8 @@ namespace R::Net {
         return false;
     }
 }  // namespace R::Net
+
+#include <string>
 
 namespace R::Net {
 
@@ -521,7 +533,7 @@ namespace R::Net {
             hints.ai_socktype = SOCK_STREAM;
             hints.ai_protocol = IPPROTO_TCP;
 
-            iResult = getaddrinfo(hostname, port, &hints, &result);
+            iResult = getaddrinfo(hostname, std::to_string(port).c_str(), &hints, &result);
             if (iResult != 0) {
                 onError(_socket, false, "[Client] Error on getaddrinfo");
                 return false;
@@ -532,7 +544,7 @@ namespace R::Net {
 
             for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
                 ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-                if (checkForErrors(ConnectSocket, INVALID_SOCKET, false, "[Client] Error on socket creation")) {
+                if (checkForErrors(ConnectSocket, INVALID_SOCKET, "[Client] Error on socket creation", false)) {
                     freeaddrinfo(result);
                     return false;
                 }
@@ -546,7 +558,7 @@ namespace R::Net {
             }
 
             freeaddrinfo(result);
-            if (checkForErrors(ConnectSocket, INVALID_SOCKET, true, "[Client] Couldn't connect to the server")) {
+            if (checkForErrors(ConnectSocket, INVALID_SOCKET, "[Client] Couldn't connect to the server", true)) {
                 return false;
             }
 
@@ -759,9 +771,11 @@ namespace R::Net::P2P {
         uint32_t delay;
 
         void Print() {
+            char tempBuff[INET_ADDRSTRLEN];
+
             RLog("\nStart peer info ---- \n\n");
             RLog("Peer Port: %i\n", this->port);
-            RLog("Peer IP Address: %s\n", inet_ntoa(this->ipAddress));
+            RLog("Peer IP Address: %s\n", inet_ntop(AF_INET, &this->ipAddress, tempBuff, INET_ADDRSTRLEN));
             RLog("Peer delay: %i\n", this->delay);
             RLog("\nEnd peer info   ---- \n\n");
         }
@@ -1053,12 +1067,12 @@ namespace R::Net {
 
             if (!isRunning) {
                 RLog("[Server] Cannot accept connections if server is not running");
-                return {-1};
+                return {(Socket)-1};
             }
 
             Socket AcceptSocket = accept(_socket, (struct sockaddr *)&clientAddress, &addressLength);
             if (checkErrors && checkForErrors(AcceptSocket, SocketError, "[Server] Error while accepting new connections", true))
-                return {-1};
+                return {(Socket) - 1};
 
             return {AcceptSocket, clientAddress.sin_addr};
         }
