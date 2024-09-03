@@ -235,6 +235,8 @@ namespace R::Utils {
                 return "";
             } else if constexpr (std::is_same_v<T, int>) {
                 return -1;
+            } else if constexpr (std::is_same_v<T, unsigned int>) {
+                return -1;
             } else {
                 return NULL;
             }
