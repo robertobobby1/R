@@ -125,7 +125,7 @@ namespace R::Net {
 
         inline Buffer readMessage() {
             auto readResponse = Net::readMessage(_socket, "[Client] Couldn't read message");
-            if (readResponse.size < 0) {
+            if (readResponse.size <= 0) {
                 isRunning = false;
             }
             return readResponse;

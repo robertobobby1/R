@@ -5,6 +5,11 @@
 
 namespace R::Net {
 
+    struct AcceptResponseWithIp {
+        Socket socket;
+        in_addr ipAddress;
+    };
+
     class Server {
        public:
         Socket _socket;
@@ -84,17 +89,20 @@ namespace R::Net {
             onError(_socket, true, "[Server] Closing the server socket!");
         }
 
-        inline Socket acceptNewConnection(bool checkErrors = true) {
+        inline AcceptResponseWithIp acceptNewConnection(bool checkErrors = true) {
+            struct sockaddr_in clientAddress;
+            socklen_t addressLength = sizeof(sockaddr_in);
+
             if (!isRunning) {
                 RLog("[Server] Cannot accept connections if server is not running");
-                return -1;
+                return {-1};
             }
 
-            Socket AcceptSocket = accept(_socket, NULL, NULL);
+            Socket AcceptSocket = accept(_socket, (struct sockaddr *)&clientAddress, &addressLength);
             if (checkErrors && checkForErrors(AcceptSocket, SocketError, "[Server] Error while accepting new connections", true))
-                return -1;
+                return {-1};
 
-            return AcceptSocket;
+            return {AcceptSocket, clientAddress.sin_addr};
         }
 
         inline int sendMessage(Socket socket, Buffer buff) {
