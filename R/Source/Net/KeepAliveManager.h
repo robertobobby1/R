@@ -10,7 +10,6 @@
 
 namespace R::Net::P2P {
 
-    typedef std::function<Socket()> LogCallbackFunction;
     inline const int defaultTimerInSeconds = 10;
     inline uint8_t KeepAliveHeader = 255;
 
@@ -62,14 +61,18 @@ namespace R::Net::P2P {
             while (keepRunning) {
                 std::this_thread::sleep_for(std::chrono::seconds(timerInSeconds));
                 for (auto& socket : keepAliveSockets) {
-                    sendResponse = sendKeepAlivePackage(socket, buffer);
-                    if (sendResponse != -1) {
+                    sendResponse = sendKeepAlivePackage(socket.first, buffer);
+                    if (maxPackagesToSend == ++socket.second) {
+                        if (onMaxPackagesArrivedCallback != nullptr) {
+                            onMaxPackagesArrivedCallback(socket.first);
+                        }
+                    } else if (sendResponse != -1) {
                         continue;
                     }
 
-                    removeSocketToKeepAlive(socket);
+                    removeSocketToKeepAlive(socket.first);
                     if (onClosedCallback != nullptr) {
-                        onClosedCallback(socket);
+                        onClosedCallback(socket.first);
                     }
                 }
             }
@@ -80,23 +83,33 @@ namespace R::Net::P2P {
         }
 
         inline void addNewSocketToKeepAlive(Socket _socket) {
-            keepAliveSockets.push_back(_socket);
+            keepAliveSockets[_socket] = 0;
         }
 
         inline void removeSocketToKeepAlive(Socket _socket) {
-            Utils::removeFromVector(keepAliveSockets, _socket);
+            keepAliveSockets.erase(_socket);
         }
 
         inline void addOnConnectionClosedCallback(std::function<void(Socket)> func) {
             onClosedCallback = func;
         }
 
-        std::vector<Socket> keepAliveSockets;
+        inline void addOnKeepAliveMaxPackagesSent(uint16_t maxPackages, std::function<void(Socket)> func = nullptr) {
+            maxPackagesToSend = maxPackages;
+
+            if (func != nullptr) {
+                onMaxPackagesArrivedCallback = func;
+            }
+        }
+
+        std::unordered_map<Socket, int> keepAliveSockets;
         std::function<void(Socket)> onClosedCallback = nullptr;
+        std::function<void(Socket)> onMaxPackagesArrivedCallback = nullptr;
         std::thread runningThread;
 
         // flag to be able to stop it
         bool keepRunning = true;
         int timerInSeconds;
+        int maxPackagesToSend = -1;
     };
 }  // namespace R::Net::P2P

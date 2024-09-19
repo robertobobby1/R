@@ -117,5 +117,9 @@ namespace R {
                 ini = newBuffer;
             }
         }
+
+        void print() {
+            RLog("[Buffer] message: %s, size: %i\n", ini, (int)size);
+        }
     };
 }  // namespace R

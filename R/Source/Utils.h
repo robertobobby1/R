@@ -8,6 +8,8 @@
 #include "Buffer.h"
 #include "Macros.h"
 #include "NetImports.h"
+#include "Tempo.h"
+#include "Random.h"
 
 namespace R::Utils {
 
@@ -25,6 +27,28 @@ namespace R::Utils {
 
     inline void unsetFlag(uint8_t &flagObject, uint8_t flag) {
         flagObject &= ~flag;
+    }
+
+    template <class ADAPTER>
+    const auto &getQueueCObject(ADAPTER &a) {
+        struct hack : private ADAPTER {
+            static auto &get(ADAPTER &a) {
+                return a.*(&hack::c);
+            }
+        };
+
+        return hack::get(a);
+    }
+
+    template <typename T>
+    inline void removeFromQueue(std::queue<T> &queue, T &value) {
+        auto queueC = getQueueCObject(queue);
+
+        for (auto it = queueC.begin(); it != queueC.end(); ++it) {
+            if (*it == value) {
+                queueC.erase(it);
+            }
+        }
     }
 
     template <typename T>
@@ -65,17 +89,6 @@ namespace R::Utils {
         queue.push(value);
     }
 
-    template <class ADAPTER>
-    const auto &getQueueCObject(ADAPTER &a) {
-        struct hack : private ADAPTER {
-            static auto &get(ADAPTER &a) {
-                return a.*(&hack::c);
-            }
-        };
-
-        return hack::get(a);
-    }
-
     template <typename T>
     void removeFromVector(std::vector<T> &vector, T value) {
         auto it = std::find(vector.begin(), vector.end(), value);
@@ -94,25 +107,20 @@ namespace R::Utils {
     }
 
     inline std::string generateUUID(int length) {
-        static const char alphanum[] =
-            "0123456789"
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            "abcdefghijklmnopqrstuvwxyz";
-        std::string uuid;
-        uuid.reserve(length);
-
-        for (int i = 0; i < length; ++i) {
-            uuid += alphanum[rand() % (sizeof(alphanum) - 1)];
-        }
-        return uuid;
+        return RVendor::Random::GetString(RVendor::Random::Charset::AlphaNum, length);
     };
 
     inline int randomNumber(int min, int max) {
-        return rand() % (max - min + 1) + min;
+        return RVendor::Random::GetInt(min, max);
     }
 
-    inline unsigned int randomUintNumber(int min, int max) {
-        return (unsigned int)(rand() % (max - min + 1) + min);
+    inline unsigned int randomUintNumber(unsigned int min, unsigned int max) {
+        return (unsigned int)RVendor::Random::GetInt(min, max);
+    }
+
+    template <class Rep, class Period>
+    inline void sleepThread(Time::Duration<Rep, Period> duration) {
+        std::this_thread::sleep_for(duration);
     }
 
 #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)

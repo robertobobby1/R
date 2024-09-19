@@ -86,6 +86,7 @@ namespace R::Net {
 #endif
 
         inline void terminate() {
+            isRunning = false;
             onError(_socket, true, "[Server] Closing the server socket!");
         }
 
@@ -100,9 +101,13 @@ namespace R::Net {
 
             Socket AcceptSocket = accept(_socket, (struct sockaddr *)&clientAddress, &addressLength);
             if (checkErrors && checkForErrors(AcceptSocket, SocketError, "[Server] Error while accepting new connections", true))
-                return {(Socket) - 1};
+                return {(Socket)-1};
 
             return {AcceptSocket, clientAddress.sin_addr};
+        }
+
+        inline bool setServerNonBlocking() {
+            return setServerNonBlockingMode(_socket);
         }
 
         inline int sendMessage(Socket socket, Buffer buff) {

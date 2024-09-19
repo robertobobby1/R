@@ -115,6 +115,7 @@ namespace R::Net {
 #endif
 
         inline void terminate() {
+            isRunning = false;
             onError(_socket, true, "[Client] Closing the client socket!");
         }
 

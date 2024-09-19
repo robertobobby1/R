@@ -20,11 +20,14 @@ workspace "R"
 		{
 			"%{wks.location}/R/Source/**.h",
 			"%{wks.location}/R/Source/**.cpp",
-			
 		}
 		includedirs
 		{
 			"%{wks.location}/R/Source",
 			"%{wks.location}/R/Source/Net",
-
+			"%{wks.location}/R/Source/Vendor/Random",
+		}
+		buildoptions
+		{
+			"-ferror-limit=0"
 		}
