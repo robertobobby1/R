@@ -154,6 +154,15 @@ namespace R::Utils {
 
 #endif
 
+    void makeXChildren(int childProcesses) {
+        pid_t pid = 1;
+        for (auto i = 0; i < childProcesses; i++) {
+            if (pid > 0) {
+                pid = fork();
+            }
+        }
+    }
+
     inline void hexDump(Buffer buffer) {
         unsigned char *buf = (unsigned char *)buffer.ini;
         unsigned int i, j;
