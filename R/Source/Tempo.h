@@ -5,6 +5,7 @@
 #include <chrono>
 #include <thread>
 #include <iostream>
+#include <functional>
 
 namespace R::Time {
 

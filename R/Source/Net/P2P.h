@@ -239,7 +239,7 @@ namespace R::Net::P2P {
             return "";
 
         auto payload = getPayload(buffer);
-        return std::string(payload.ini, UUID_LENGTH);
+        return std::string(payload.ini);
     }
 
     inline ServerConnectPayload getPayloadFromServerConnectBuffer(Buffer& buffer) {

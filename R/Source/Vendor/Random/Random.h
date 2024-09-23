@@ -4,6 +4,7 @@
 #    define RANDOM_HPP
 
 #    include <random>
+#    include "pcg_uint128.h"
 #    include "pcg_random.h"
 #    include <array>
 

@@ -10,7 +10,7 @@
 namespace R {
     class Buffer {
        public:
-        char *ini;
+        const char *ini;
         size_t size = 0;
         size_t maxSize = 0;
 
@@ -29,7 +29,7 @@ namespace R {
             size = otherBuff.size;
             maxSize = otherBuff.maxSize;
 
-            memcpy(ini, otherBuff.ini, otherBuff.size);
+            memcpy((void *)ini, otherBuff.ini, otherBuff.size);
         }
 
         uint8_t operator[](int position) {
@@ -47,7 +47,7 @@ namespace R {
             size = otherBuff.size;
             maxSize = otherBuff.maxSize;
 
-            memcpy(ini, otherBuff.ini, otherBuff.size);
+            memcpy((void *)ini, otherBuff.ini, otherBuff.size);
             return *this;
         }
 
