@@ -102,7 +102,7 @@ namespace R {
         void write(T const value, int appendLength) {
             increaseBufferSizeIfNecessary(appendLength);
 
-            memcpy(ini + size, value, appendLength);
+            memcpy((void *)(ini + size), value, appendLength);
             size += appendLength;
         }
 

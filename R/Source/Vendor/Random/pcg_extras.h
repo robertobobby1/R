@@ -60,6 +60,14 @@
 #    define PCG_NOINLINE
 #endif
 
+#ifdef max
+#    undef max
+#endif
+
+#ifdef min
+#    undef min
+#endif
+
 /*
  * Some members of the PCG library use 128-bit math.  When compiling on 64-bit
  * platforms, both GCC and Clang provide 128-bit integer types that are ideal

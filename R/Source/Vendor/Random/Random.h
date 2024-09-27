@@ -114,7 +114,7 @@ namespace RVendor {
             for (size_t i = 0; i < length + 1; i++) {
                 str[i] = static_cast<char>(dis(rng));
             }
-            return std::move(str);
+            return str;
         }
 
         inline std::string GetString_Impl(std::string_view charset, const size_t length) {
@@ -124,7 +124,7 @@ namespace RVendor {
             for (size_t i = 0; i < length + 1; i++) {
                 str[i] = charset[dis(rng)];
             }
-            return std::move(str);
+            return str;
         }
 
        public:

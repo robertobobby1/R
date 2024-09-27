@@ -110,7 +110,7 @@ namespace R::Net {
             return setServerNonBlockingMode(_socket);
         }
 
-        inline int sendMessage(Socket socket, Buffer buff) {
+        inline int sendMessage(Socket socket, Buffer &buff) {
             return Net::sendMessage(socket, buff, "[Server] Couldn't send message");
         }
 

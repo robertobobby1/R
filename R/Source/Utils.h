@@ -146,15 +146,7 @@ namespace R::Utils {
         signal(SIGPIPE, SIG_IGN);
     }
 
-#elif defined(PLATFORM_WINDOWS)
-
-    // make it multipplatform but useless
-    inline void stackTracing() {}
-    inline void avoidSigPipe() {}
-
-#endif
-
-    void makeXChildren(int childProcesses) {
+    inline void makeXChildren(int childProcesses) {
         pid_t pid = 1;
         for (auto i = 0; i < childProcesses; i++) {
             if (pid > 0) {
@@ -162,6 +154,15 @@ namespace R::Utils {
             }
         }
     }
+
+#elif defined(PLATFORM_WINDOWS)
+
+    // make it multipplatform but useless
+    inline void stackTracing() {}
+    inline void avoidSigPipe() {}
+    void makeXChildren(int childProcesses) {}
+
+#endif
 
     inline void hexDump(Buffer buffer) {
         unsigned char *buf = (unsigned char *)buffer.ini;

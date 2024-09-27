@@ -11,11 +11,11 @@ namespace R::Net {
 
 #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
     typedef int Socket;
-#    define readSocket(socket, buffer, bufferSize) read(socket, buffer, bufferSize)
+#    define readSocket(socketValue, buffer, bufferSize) read(socketValue, buffer, bufferSize)
 #    define SocketError -1
 #elif defined(PLATFORM_WINDOWS)
     typedef SOCKET Socket;
-#    define readSocket(socket, buffer, bufferSize) _read(socket, buffer, bufferSize)
+#    define readSocket(socketValue, buffer, bufferSize) recv(socketValue, buffer, bufferSize, 0)
 #    define SocketError INVALID_SOCKET
 #endif
 
@@ -25,7 +25,7 @@ namespace R::Net {
         struct tcp_connection_info info;
         socklen_t info_len = sizeof(info);
 
-        int result = getsockopt(_socket, IPPROTO_TCP, TCP_CONNECTION_INFO, &info, &info_len);
+        getsockopt(_socket, IPPROTO_TCP, TCP_CONNECTION_INFO, &info, &info_len);
 
         return info.tcpi_srtt;
     }
@@ -36,7 +36,7 @@ namespace R::Net {
         struct tcp_info info;
         socklen_t info_len = sizeof(info);
 
-        int result = getsockopt(_socket, IPPROTO_TCP, TCP_INFO, &info, &info_len);
+        getsockopt(_socket, IPPROTO_TCP, TCP_INFO, &info, &info_len);
 
         return info.tcpi_srtt;
     }

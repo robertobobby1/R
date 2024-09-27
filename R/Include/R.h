@@ -172,7 +172,7 @@ namespace R {
         void write(T const value, int appendLength) {
             increaseBufferSizeIfNecessary(appendLength);
 
-            memcpy(ini + size, value, appendLength);
+            memcpy((void *)(ini + size), value, appendLength);
             size += appendLength;
         }
 
@@ -1364,6 +1364,14 @@ namespace pcg_extras {
 #    define PCG_NOINLINE __attribute__((noinline))
 #else
 #    define PCG_NOINLINE
+#endif
+
+#ifdef max
+#    undef max
+#endif
+
+#ifdef min
+#    undef min
 #endif
 
 /*
@@ -3626,7 +3634,7 @@ namespace RVendor {
             for (size_t i = 0; i < length + 1; i++) {
                 str[i] = static_cast<char>(dis(rng));
             }
-            return std::move(str);
+            return str;
         }
 
         inline std::string GetString_Impl(std::string_view charset, const size_t length) {
@@ -3636,7 +3644,7 @@ namespace RVendor {
             for (size_t i = 0; i < length + 1; i++) {
                 str[i] = charset[dis(rng)];
             }
-            return std::move(str);
+            return str;
         }
 
        public:
@@ -3955,15 +3963,7 @@ namespace R::Utils {
         signal(SIGPIPE, SIG_IGN);
     }
 
-#elif defined(PLATFORM_WINDOWS)
-
-    // make it multipplatform but useless
-    inline void stackTracing() {}
-    inline void avoidSigPipe() {}
-
-#endif
-
-    void makeXChildren(int childProcesses) {
+    inline void makeXChildren(int childProcesses) {
         pid_t pid = 1;
         for (auto i = 0; i < childProcesses; i++) {
             if (pid > 0) {
@@ -3971,6 +3971,15 @@ namespace R::Utils {
             }
         }
     }
+
+#elif defined(PLATFORM_WINDOWS)
+
+    // make it multipplatform but useless
+    inline void stackTracing() {}
+    inline void avoidSigPipe() {}
+    void makeXChildren(int childProcesses) {}
+
+#endif
 
     inline void hexDump(Buffer buffer) {
         unsigned char *buf = (unsigned char *)buffer.ini;
@@ -3997,11 +4006,11 @@ namespace R::Net {
 
 #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
     typedef int Socket;
-#    define readSocket(socket, buffer, bufferSize) read(socket, buffer, bufferSize)
+#    define readSocket(socketValue, buffer, bufferSize) read(socketValue, buffer, bufferSize)
 #    define SocketError -1
 #elif defined(PLATFORM_WINDOWS)
     typedef SOCKET Socket;
-#    define readSocket(socket, buffer, bufferSize) _read(socket, buffer, bufferSize)
+#    define readSocket(socketValue, buffer, bufferSize) recv(socketValue, buffer, bufferSize, 0)
 #    define SocketError INVALID_SOCKET
 #endif
 
@@ -4011,7 +4020,7 @@ namespace R::Net {
         struct tcp_connection_info info;
         socklen_t info_len = sizeof(info);
 
-        int result = getsockopt(_socket, IPPROTO_TCP, TCP_CONNECTION_INFO, &info, &info_len);
+        getsockopt(_socket, IPPROTO_TCP, TCP_CONNECTION_INFO, &info, &info_len);
 
         return info.tcpi_srtt;
     }
@@ -4022,7 +4031,7 @@ namespace R::Net {
         struct tcp_info info;
         socklen_t info_len = sizeof(info);
 
-        int result = getsockopt(_socket, IPPROTO_TCP, TCP_INFO, &info, &info_len);
+        getsockopt(_socket, IPPROTO_TCP, TCP_INFO, &info, &info_len);
 
         return info.tcpi_srtt;
     }
@@ -4200,6 +4209,7 @@ namespace R::Net {
 
             RLog("[Client] Connected to hostname %s and port %i\n", hostname, port);
             isRunning = true;
+            _socket = ConnectSocket;
             return true;
         }
 
@@ -4210,7 +4220,7 @@ namespace R::Net {
             onError(_socket, true, "[Client] Closing the client socket!");
         }
 
-        inline int sendMessage(Buffer buff) {
+        inline int sendMessage(Buffer &buff) {
             auto sendResponse = Net::sendMessage(_socket, buff, "[Client] Couldn't send message");
             if (sendResponse == -1) {
                 isRunning = false;
@@ -4732,7 +4742,7 @@ namespace R::Net {
             return setServerNonBlockingMode(_socket);
         }
 
-        inline int sendMessage(Socket socket, Buffer buff) {
+        inline int sendMessage(Socket socket, Buffer &buff) {
             return Net::sendMessage(socket, buff, "[Server] Couldn't send message");
         }
 

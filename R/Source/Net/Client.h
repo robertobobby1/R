@@ -109,6 +109,7 @@ namespace R::Net {
 
             RLog("[Client] Connected to hostname %s and port %i\n", hostname, port);
             isRunning = true;
+            _socket = ConnectSocket;
             return true;
         }
 
@@ -119,7 +120,7 @@ namespace R::Net {
             onError(_socket, true, "[Client] Closing the client socket!");
         }
 
-        inline int sendMessage(Buffer buff) {
+        inline int sendMessage(Buffer &buff) {
             auto sendResponse = Net::sendMessage(_socket, buff, "[Client] Couldn't send message");
             if (sendResponse == -1) {
                 isRunning = false;
