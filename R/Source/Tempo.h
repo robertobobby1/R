@@ -66,8 +66,8 @@ namespace R::Time {
         }
 
        private:
-        TimePoint m_start;
         NanoSeconds m_delayInNanoSeconds;
+        TimePoint m_start;
     };
 
 }  // namespace R::Time
