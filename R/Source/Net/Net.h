@@ -38,7 +38,7 @@ namespace R::Net {
 
         getsockopt(_socket, IPPROTO_TCP, TCP_INFO, &info, &info_len);
 
-        return info.tcpi_srtt;
+        return info.tcpi_rtt;
     }
 
 #endif

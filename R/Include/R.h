@@ -4,6 +4,7 @@
 #include <queue>
 #include <mutex>
 #include <unordered_map>
+#include <condition_variable>
 
 #include <iostream>
 #include <stdio.h>
@@ -200,7 +201,6 @@ namespace R {
 #    include <netinet/tcp.h>
 #    include <arpa/inet.h>
 #    include <unistd.h>
-#    include <execinfo.h>
 #    include <fcntl.h>
 #    include <netdb.h>
 #elif defined(PLATFORM_WINDOWS)
@@ -3942,27 +3942,6 @@ namespace R::Utils {
 
 #if defined(PLATFORM_MACOS) || defined(PLATFORM_LINUX)
 
-    inline void onExceptionHandler(int sig) {
-        void *array[10];
-        size_t size;
-
-        // get void*'s for all entries on the stack
-        size = backtrace(array, 10);
-
-        // print out all the frames to stderr
-        RLog("[Expception Handler]: signal %d:\n", sig);
-        backtrace_symbols_fd(array, size, STDERR_FILENO);
-        exit(1);
-    }
-
-    inline void stackTracing() {
-        signal(SIGSEGV, onExceptionHandler);
-    }
-
-    inline void avoidSigPipe() {
-        signal(SIGPIPE, SIG_IGN);
-    }
-
     inline void makeXChildren(int childProcesses) {
         pid_t pid = 1;
         for (auto i = 0; i < childProcesses; i++) {
@@ -3974,9 +3953,6 @@ namespace R::Utils {
 
 #elif defined(PLATFORM_WINDOWS)
 
-    // make it multipplatform but useless
-    inline void stackTracing() {}
-    inline void avoidSigPipe() {}
     void makeXChildren(int childProcesses) {}
 
 #endif
@@ -4033,7 +4009,7 @@ namespace R::Net {
 
         getsockopt(_socket, IPPROTO_TCP, TCP_INFO, &info, &info_len);
 
-        return info.tcpi_srtt;
+        return info.tcpi_rtt;
     }
 
 #endif

@@ -419,3 +419,6 @@ NoBiggy/x64/**
 *.make
 Makefile
 .vscode/
+
+bin/
+build/
