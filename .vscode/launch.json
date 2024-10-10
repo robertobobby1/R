@@ -5,7 +5,7 @@
       "name": "(lldb) Launch",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/bin/Debug-macosx/TestProject",
+      "program": "${workspaceFolder}/bin/R",
       "cwd": "${workspaceFolder}",
       "args": [],
       "stopAtEntry": false,
