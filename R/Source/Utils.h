@@ -44,11 +44,16 @@ namespace R::Utils {
     template <typename T>
     inline void removeFromQueue(std::queue<T> &queue, T &value) {
         auto queueC = getQueueCObject(queue);
+        auto toRemove = queueC.end();
 
         for (auto it = queueC.begin(); it != queueC.end(); ++it) {
             if (*it == value) {
-                queueC.erase(it);
+                toRemove = it;
             }
+        }
+
+        if (toRemove != queueC.end()) {
+            queueC.erase(toRemove);
         }
     }
 

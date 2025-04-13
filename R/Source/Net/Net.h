@@ -107,4 +107,8 @@ namespace R::Net {
         }
         return false;
     }
+
+    inline bool isValidSocket(Socket socket) {
+        return socket >= 0 && socket < FD_SETSIZE;
+    }
 }  // namespace R::Net

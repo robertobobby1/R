@@ -56,10 +56,18 @@ namespace R::Net::P2P {
         inline void run() {
             int sendResponse = 0;
             auto buffer = createSecuredBuffer();
+            auto forceRecheck = false;
             buffer.write(KeepAliveHeader);
 
             while (keepRunning) {
-                std::this_thread::sleep_for(std::chrono::seconds(timerInSeconds));
+                if (!forceRecheck) {
+                    std::this_thread::sleep_for(std::chrono::seconds(timerInSeconds));
+                }
+
+                forceRecheck = false;
+                if (keepAliveSockets.size() == 0) {
+                    continue;
+                }
                 for (auto& socket : keepAliveSockets) {
                     sendResponse = sendKeepAlivePackage(socket.first, buffer);
                     if (maxPackagesToSend == ++socket.second) {
@@ -74,6 +82,9 @@ namespace R::Net::P2P {
                     if (onClosedCallback != nullptr) {
                         onClosedCallback(socket.first);
                     }
+
+                    forceRecheck = true;
+                    break;
                 }
             }
         }
